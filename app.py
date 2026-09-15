@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -76,7 +76,8 @@ def group(group_id):
     """, (session["user_id"],)).fetchall()
 
     messages = connection.execute("""
-        SELECT messages.content,
+        SELECT messages.id,
+               messages.content,
                messages.created_at,
                users.username
         FROM messages
@@ -106,6 +107,61 @@ def group(group_id):
         members=members
     )
 
+
+# -------------------------------------------------
+# HENT NYE MELDINGER
+# -------------------------------------------------
+
+@app.route("/messages/<int:group_id>")
+def get_messages(group_id):
+
+    if "user_id" not in session:
+        return jsonify({"messages": []})
+
+    connection = get_database()
+
+    membership = connection.execute("""
+        SELECT *
+        FROM group_members
+        WHERE group_id = ? AND user_id = ?
+    """, (group_id, session["user_id"])).fetchone()
+
+    if not membership:
+        connection.close()
+        return jsonify({"messages": []})
+
+    messages = connection.execute("""
+        SELECT messages.id,
+               messages.content,
+               messages.created_at,
+               messages.user_id,
+               users.username
+        FROM messages
+        JOIN users
+        ON messages.user_id = users.id
+        WHERE messages.group_id = ?
+        ORDER BY messages.id ASC
+    """, (group_id,)).fetchall()
+
+    connection.close()
+
+    return jsonify({
+        "messages": [
+            {
+                "id": message["id"],
+                "content": message["content"],
+                "created_at": message["created_at"],
+                "user_id": message["user_id"],
+                "username": message["username"]
+            }
+            for message in messages
+        ]
+    })
+
+
+# -------------------------------------------------
+# SEND MELDING
+# -------------------------------------------------
 
 @app.route("/send_message", methods=["POST"])
 def send_message():
@@ -147,6 +203,10 @@ def send_message():
     return redirect(url_for("group", group_id=group_id))
 
 
+# -------------------------------------------------
+# OPPRETT GRUPPE
+# -------------------------------------------------
+
 @app.route("/create_group", methods=["POST"])
 def create_group():
 
@@ -185,6 +245,10 @@ def create_group():
 
     return redirect(url_for("group", group_id=group_id))
 
+
+# -------------------------------------------------
+# SLETT GRUPPE
+# -------------------------------------------------
 
 @app.route("/delete_group/<int:group_id>", methods=["POST"])
 def delete_group(group_id):
@@ -229,6 +293,10 @@ def delete_group(group_id):
     return redirect(url_for("home"))
 
 
+# -------------------------------------------------
+# FJERN MEDLEM
+# -------------------------------------------------
+
 @app.route("/remove_member/<int:group_id>/<int:user_id>", methods=["POST"])
 def remove_member(group_id, user_id):
 
@@ -268,6 +336,10 @@ def remove_member(group_id, user_id):
 
     return redirect(url_for("group", group_id=group_id))
 
+
+# -------------------------------------------------
+# LEGG TIL MEDLEM
+# -------------------------------------------------
 
 @app.route("/add_member/<int:group_id>", methods=["POST"])
 def add_member(group_id):
@@ -330,15 +402,28 @@ def add_member(group_id):
     return redirect(url_for("group", group_id=group_id))
 
 
+# -------------------------------------------------
+# BRUKERSØK
+# -------------------------------------------------
+
 @app.route("/search_users/<int:group_id>")
 def search_users(group_id):
 
     if "user_id" not in session:
         return {"users": []}
 
-    search = request.args.get("q", "").strip()
-
     connection = get_database()
+
+    group = connection.execute(
+        "SELECT owner_id FROM groups WHERE id = ?",
+        (group_id,)
+    ).fetchone()
+
+    if not group or group["owner_id"] != session["user_id"]:
+        connection.close()
+        return {"users": []}
+
+    search = request.args.get("q", "").strip()
 
     users = connection.execute("""
         SELECT users.id, users.username
@@ -370,6 +455,10 @@ def search_users(group_id):
         ]
     }
 
+
+# -------------------------------------------------
+# REGISTER
+# -------------------------------------------------
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -409,6 +498,10 @@ def register():
     return render_template("register.html")
 
 
+# -------------------------------------------------
+# LOGIN
+# -------------------------------------------------
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
 
@@ -441,6 +534,10 @@ def login():
 
     return render_template("login.html")
 
+
+# -------------------------------------------------
+# LOGOUT
+# -------------------------------------------------
 
 @app.route("/logout")
 def logout():

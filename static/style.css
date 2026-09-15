@@ -623,3 +623,27 @@ body {
 .search-user button:hover {
     background: #FFD633;
 }
+
+/* Varsel-knapp */
+
+.chat-header-buttons {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.notification-button {
+    border: none;
+    background: transparent;
+    color: #F5C400;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 8px 10px;
+    border-radius: 6px;
+}
+
+.notification-button:hover {
+    background: rgba(245, 196, 0, 0.1);
+    color: #FFD633;
+}

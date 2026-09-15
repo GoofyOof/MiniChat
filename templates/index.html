@@ -12,7 +12,7 @@
 
 </head>
 
-<body>
+<body data-user-id="{{ session['user_id'] }}">
 
 <div class="app">
 
@@ -77,32 +77,50 @@
 
                 </div>
 
-                {% if selected_group["owner_id"] == session["user_id"] %}
+                <div class="chat-header-buttons">
 
-                    <form
-                        action="{{ url_for('delete_group', group_id=selected_group['id']) }}"
-                        method="POST"
-                        onsubmit="return confirm('Er du sikker på at du vil slette denne gruppen?');"
+                    <button
+                        class="notification-button"
+                        onclick="enableNotifications()"
                     >
+                        🔔 Aktiver varsler
+                    </button>
 
-                        <button class="delete-group-button">
-                            Slett gruppe
-                        </button>
+                    {% if selected_group["owner_id"] == session["user_id"] %}
 
-                    </form>
+                        <form
+                            action="{{ url_for('delete_group', group_id=selected_group['id']) }}"
+                            method="POST"
+                            onsubmit="return confirm('Er du sikker på at du vil slette denne gruppen?');"
+                        >
 
-                {% endif %}
+                            <button class="delete-group-button">
+                                Slett gruppe
+                            </button>
+
+                        </form>
+
+                    {% endif %}
+
+                </div>
 
             </header>
 
 
-            <section class="messages">
+            <section
+                class="messages"
+                id="messages"
+                data-group-id="{{ selected_group['id'] }}"
+            >
 
                 {% if messages %}
 
                     {% for message in messages %}
 
-                        <div class="message">
+                        <div
+                            class="message"
+                            data-message-id="{{ message['id'] }}"
+                        >
 
                             <strong>
                                 {{ message["username"] }}

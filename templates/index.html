@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>MiniChat</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+</head>
+
+<body>
+
+<div class="app">
+
+    <aside class="sidebar">
+
+        <h1>MiniChat</h1>
+
+        <h3>GRUPPER</h3>
+
+        <div class="groups">
+
+            {% if groups %}
+
+                {% for group in groups %}
+
+                    <a
+                        href="{{ url_for('group', group_id=group['id']) }}"
+                        class="group-button {% if selected_group and selected_group['id'] == group['id'] %}active{% endif %}"
+                    >
+                        💬 {{ group["name"] }}
+                    </a>
+
+                {% endfor %}
+
+            {% else %}
+
+                <p class="no-groups">
+                    Du er ikke med i noen grupper.
+                </p>
+
+            {% endif %}
+
+        </div>
+
+        <button
+            class="create-group-button"
+            onclick="openGroupWindow()"
+        >
+            + Opprett gruppe
+        </button>
+
+        <a href="/logout" class="logout-button">
+            Logg ut
+        </a>
+
+    </aside>
+
+
+    <main class="chat">
+
+        {% if selected_group %}
+
+            <header class="chat-header">
+
+                <div>
+
+                    💬 {{ selected_group["name"] }}
+
+                    <small>
+                        {{ members|length }} medlemmer
+                    </small>
+
+                </div>
+
+                {% if selected_group["owner_id"] == session["user_id"] %}
+
+                    <form
+                        action="{{ url_for('delete_group', group_id=selected_group['id']) }}"
+                        method="POST"
+                        onsubmit="return confirm('Er du sikker på at du vil slette denne gruppen?');"
+                    >
+
+                        <button class="delete-group-button">
+                            Slett gruppe
+                        </button>
+
+                    </form>
+
+                {% endif %}
+
+            </header>
+
+
+            <section class="messages">
+
+                {% if messages %}
+
+                    {% for message in messages %}
+
+                        <div class="message">
+
+                            <strong>
+                                {{ message["username"] }}
+                            </strong>
+
+                            <p>
+                                {{ message["content"] }}
+                            </p>
+
+                            <small>
+                                {{ message["created_at"] }}
+                            </small>
+
+                        </div>
+
+                    {% endfor %}
+
+                {% else %}
+
+                    <div class="empty-chat">
+
+                        <h2>Ingen meldinger ennå</h2>
+
+                        <p>
+                            Start samtalen!
+                        </p>
+
+                    </div>
+
+                {% endif %}
+
+            </section>
+
+
+            <footer class="message-box">
+
+                <form
+                    action="{{ url_for('send_message') }}"
+                    method="POST"
+                >
+
+                    <input
+                        type="hidden"
+                        name="group_id"
+                        value="{{ selected_group['id'] }}"
+                    >
+
+                    <input
+                        type="text"
+                        name="content"
+                        placeholder="Skriv en melding..."
+                        autocomplete="off"
+                        required
+                    >
+
+                    <button type="submit">
+                        SEND
+                    </button>
+
+                </form>
+
+            </footer>
+
+
+        {% else %}
+
+            <div class="no-group-selected">
+
+                <div>
+
+                    <h2>Velkommen til MiniChat 👋</h2>
+
+                    <p>
+                        Velg en gruppe til venstre,
+                        eller opprett en ny gruppe.
+                    </p>
+
+                </div>
+
+            </div>
+
+        {% endif %}
+
+    </main>
+
+
+    {% if selected_group %}
+
+        <aside class="members-sidebar">
+
+            <div class="members-header">
+
+                <h3>MEDLEMMER</h3>
+
+                {% if selected_group["owner_id"] == session["user_id"] %}
+
+                    <button
+                        class="add-member-button"
+                        onclick="openMemberWindow()"
+                    >
+                        + Legg til
+                    </button>
+
+                {% endif %}
+
+            </div>
+
+
+            {% for member in members %}
+
+                <div class="member">
+
+                    <div class="member-info">
+
+                        <div class="avatar">
+                            {{ member["username"][0]|upper }}
+                        </div>
+
+                        <span>
+
+                            {{ member["username"] }}
+
+                            {% if member["id"] == selected_group["owner_id"] %}
+
+                                <small>
+                                    Eier
+                                </small>
+
+                            {% endif %}
+
+                        </span>
+
+                    </div>
+
+
+                    {% if selected_group["owner_id"] == session["user_id"] and member["id"] != session["user_id"] %}
+
+                        <form
+                            action="{{ url_for('remove_member', group_id=selected_group['id'], user_id=member['id']) }}"
+                            method="POST"
+                            onsubmit="return confirm('Fjerne dette medlemmet fra gruppen?');"
+                        >
+
+                            <button class="remove-member">
+                                ×
+                            </button>
+
+                        </form>
+
+                    {% endif %}
+
+                </div>
+
+            {% endfor %}
+
+        </aside>
+
+    {% endif %}
+
+</div>
+
+
+<!-- OPPRETT GRUPPE -->
+
+<div id="group-window" class="group-window">
+
+    <div class="group-box">
+
+        <h2>Opprett gruppe</h2>
+
+        <form
+            action="{{ url_for('create_group') }}"
+            method="POST"
+        >
+
+            <input
+                type="text"
+                name="group_name"
+                placeholder="Gruppenavn"
+                maxlength="50"
+                required
+            >
+
+            <div class="group-actions">
+
+                <button
+                    type="button"
+                    onclick="closeGroupWindow()"
+                >
+                    Avbryt
+                </button>
+
+                <button type="submit">
+                    Opprett
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<!-- LEGG TIL MEDLEM -->
+
+{% if selected_group %}
+
+<div id="member-window" class="group-window">
+
+    <div class="group-box">
+
+        <h2>Legg til medlem</h2>
+
+        <form
+            action="{{ url_for('add_member', group_id=selected_group['id']) }}"
+            method="POST"
+        >
+
+            <input
+                type="text"
+                name="username"
+                placeholder="Skriv brukernavn..."
+                autocomplete="off"
+                required
+            >
+
+            <div class="group-actions">
+
+                <button
+                    type="button"
+                    onclick="closeMemberWindow()"
+                >
+                    Avbryt
+                </button>
+
+                <button type="submit">
+                    Legg til
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endif %}
+
+
+<script
+    src="{{ url_for('static', filename='script.js') }}"
+></script>
+
+</body>
+
+</html>

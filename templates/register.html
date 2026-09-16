@@ -1,45 +1,107 @@
 <!DOCTYPE html>
-<html>
+<html lang="no">
+
 <head>
-    <title>Registrer deg - MiniChat</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Opprett konto - MiniChat</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
 </head>
 
 <body>
 
-    <div class="register-container">
+    <div class="auth-page">
 
-        <div class="register-box">
+        <div class="auth-card">
+
+            <div class="auth-logo">
+                💬
+            </div>
 
             <h1>MiniChat</h1>
 
-            <h2>Opprett konto</h2>
+            <p class="auth-subtitle">
+                Opprett en ny konto
+            </p>
 
-            <form method="POST">
+
+            {% if error %}
+                <div class="auth-error">
+                    {{ error }}
+                </div>
+            {% endif %}
+
+
+            <form method="POST" class="auth-form">
+
+                <label for="username">
+                    Brukernavn
+                </label>
 
                 <input
                     type="text"
+                    id="username"
                     name="username"
-                    placeholder="Brukernavn"
+                    placeholder="Velg et brukernavn"
                     required
+                    maxlength="30"
+                    autocomplete="username"
                 >
+
+
+                <label for="password">
+                    Passord
+                </label>
 
                 <input
                     type="password"
+                    id="password"
                     name="password"
-                    placeholder="Passord"
+                    placeholder="Velg et passord"
                     required
+                    autocomplete="new-password"
                 >
 
-                <button type="submit">
+
+                <button
+                    type="submit"
+                    class="auth-button"
+                >
                     Opprett konto
                 </button>
 
             </form>
+
+
+            <div class="auth-links">
+
+                <p>
+                    Har du allerede en konto?
+                </p>
+
+                <a href="{{ url_for('login') }}">
+                    Logg inn
+                </a>
+
+            </div>
+
+
+            <a
+                href="{{ url_for('rules') }}"
+                class="rules-login-link"
+            >
+                📜 Les regler
+            </a>
 
         </div>
 
     </div>
 
 </body>
+
 </html>

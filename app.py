@@ -741,6 +741,10 @@ def login():
 # PROFIL
 # =========================================
 
+@app.route("/rules")
+def rules():
+    return render_template("rules.html")
+
 @app.route("/profile")
 def profile():
 

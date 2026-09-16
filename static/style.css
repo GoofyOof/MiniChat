@@ -1131,3 +1131,171 @@ body {
 .member-profile-link:hover {
     text-decoration: underline;
 }
+
+/* =========================================
+   MOBIL
+   ========================================= */
+
+@media (max-width: 700px) {
+
+    html,
+    body {
+        width: 100%;
+        min-height: 100%;
+        margin: 0;
+        overflow-x: hidden;
+    }
+
+    .app {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        min-height: 100vh;
+    }
+
+    /* SIDEBAR */
+
+    .sidebar {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 15px;
+    }
+
+    .sidebar h1 {
+        text-align: center;
+        margin-bottom: 15px;
+    }
+
+    .sidebar h3 {
+        display: none;
+    }
+
+    .groups {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding-bottom: 8px;
+    }
+
+    .group-button {
+        flex: 0 0 auto;
+        white-space: nowrap;
+    }
+
+    .create-group-button,
+    .profile-link,
+    .logout-button {
+        width: 100%;
+        box-sizing: border-box;
+        text-align: center;
+    }
+
+    /* CHAT */
+
+    .chat {
+        width: 100%;
+        min-height: 65vh;
+        box-sizing: border-box;
+    }
+
+    .chat-header {
+        padding: 12px;
+        gap: 8px;
+    }
+
+    .chat-header-buttons {
+        gap: 5px;
+    }
+
+    .notification-button {
+        font-size: 12px;
+        padding: 8px;
+    }
+
+    .delete-group-button {
+        font-size: 12px;
+        padding: 8px;
+    }
+
+    .messages {
+        padding: 10px;
+        box-sizing: border-box;
+    }
+
+    .message {
+        max-width: 90%;
+        word-wrap: break-word;
+    }
+
+    .message-box {
+        padding: 10px;
+    }
+
+    .message-box form {
+        display: flex;
+        gap: 6px;
+    }
+
+    .message-box input {
+        min-width: 0;
+        flex: 1;
+    }
+
+    .message-box button {
+        flex-shrink: 0;
+    }
+
+    /* MEDLEMMER */
+
+    .members-sidebar {
+        display: none;
+    }
+
+    /* PROFIL */
+
+    .profile-page {
+        min-height: 100vh;
+        padding: 15px;
+        box-sizing: border-box;
+        align-items: flex-start;
+    }
+
+    .profile-card {
+        width: 100%;
+        padding: 20px;
+        margin-top: 15px;
+    }
+
+    .profile-header {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .profile-header h1 {
+        width: 100%;
+    }
+
+    .profile-stats {
+        display: flex;
+        gap: 10px;
+    }
+
+    .profile-stat {
+        flex: 1;
+    }
+
+    .profile-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    /* REDIGER PROFIL */
+
+    .edit-profile-form input,
+    .edit-profile-form textarea {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+}

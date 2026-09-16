@@ -15,92 +15,60 @@
 
 <body>
 
-    <div class="auth-page">
+<div class="register-container">
 
-        <div class="auth-card">
+    <div class="register-box">
 
-            <div class="auth-logo">
-                💬
-            </div>
+        <h1>MiniChat</h1>
 
-            <h1>MiniChat</h1>
+        <h2>Logg inn</h2>
 
-            <p class="auth-subtitle">
-                Logg inn på kontoen din
+        {% if error %}
+            <p style="color: #EF4444; text-align: center;">
+                {{ error }}
             </p>
+        {% endif %}
 
+        <form method="POST">
 
-            {% if error %}
-                <div class="auth-error">
-                    {{ error }}
-                </div>
-            {% endif %}
-
-
-            <form method="POST" class="auth-form">
-
-                <label for="username">
-                    Brukernavn
-                </label>
-
-                <input
-                    type="text"
-                    id="username"
-                    name="username"
-                    placeholder="Brukernavn"
-                    required
-                    autocomplete="username"
-                >
-
-
-                <label for="password">
-                    Passord
-                </label>
-
-                <input
-                    type="password"
-                    id="password"
-                    name="password"
-                    placeholder="Passord"
-                    required
-                    autocomplete="current-password"
-                >
-
-
-                <button
-                    type="submit"
-                    class="auth-button"
-                >
-                    Logg inn
-                </button>
-
-            </form>
-
-
-            <div class="auth-links">
-
-                <p>
-                    Har du ikke en konto?
-                </p>
-
-                <a href="{{ url_for('register') }}">
-                    Opprett konto
-                </a>
-
-            </div>
-
-
-            <a
-                href="{{ url_for('rules') }}"
-                class="rules-login-link"
+            <input
+                type="text"
+                name="username"
+                placeholder="Brukernavn"
+                required
+                autocomplete="username"
             >
+
+            <input
+                type="password"
+                name="password"
+                placeholder="Passord"
+                required
+                autocomplete="current-password"
+            >
+
+            <button type="submit">
+                Logg inn
+            </button>
+
+        </form>
+
+        <p>
+            Har du ikke konto?
+            <a href="{{ url_for('register') }}">
+                Opprett konto
+            </a>
+        </p>
+
+        <p>
+            <a href="{{ url_for('rules') }}">
                 📜 Les regler
             </a>
-
-        </div>
+        </p>
 
     </div>
 
-</body>
+</div>
 
+</body>
 </html>

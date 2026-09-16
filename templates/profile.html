@@ -41,8 +41,12 @@
                 <div class="profile-name">
 
                     <h2>
-                        {{ user['display_name'] or user['username'] }}
-                    </h2>
+    {{ user['display_name'] or user['username'] }}
+
+    {% if user['is_dev'] %}
+        <span class="dev-badge">🛠️ DEV</span>
+    {% endif %}
+</h2>
 
                     <p class="profile-username">
                         @{{ user['username'] }}

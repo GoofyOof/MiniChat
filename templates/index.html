@@ -331,6 +331,10 @@
         {{ member["username"] }}
     </a>
 
+    {% if member["is_dev"] %}
+        <span class="dev-badge">🛠️ DEV</span>
+    {% endif %}
+
     {% if member["id"] == selected_group["owner_id"] %}
 
         <small>

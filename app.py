@@ -105,7 +105,8 @@ def group(group_id):
     members = connection.execute("""
         SELECT
             users.id,
-            users.username
+            users.username,
+            users.is_dev
         FROM users
         JOIN group_members
         ON users.id = group_members.user_id
@@ -776,7 +777,8 @@ def user_profile(user_id, own_profile=False):
             username,
             display_name,
             bio,
-            created_at
+            created_at,
+            is_dev
         FROM users
         WHERE id = ?
     """, (user_id,)).fetchone()

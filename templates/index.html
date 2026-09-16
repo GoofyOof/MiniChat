@@ -16,6 +16,8 @@
 
 <div class="app">
 
+    <!-- SIDEBAR -->
+
     <aside class="sidebar">
 
         <h1>MiniChat</h1>
@@ -32,7 +34,9 @@
                         href="{{ url_for('group', group_id=group['id']) }}"
                         class="group-button {% if selected_group and selected_group['id'] == group['id'] %}active{% endif %}"
                     >
+
                         💬 {{ group["name"] }}
+
                     </a>
 
                 {% endfor %}
@@ -47,6 +51,7 @@
 
         </div>
 
+
         <button
             class="create-group-button"
             onclick="openGroupWindow()"
@@ -54,16 +59,24 @@
             + Opprett gruppe
         </button>
 
-        <a href="/logout" class="logout-button">
+
+        <a
+            href="{{ url_for('logout') }}"
+            class="logout-button"
+        >
             Logg ut
         </a>
 
     </aside>
 
 
+    <!-- CHAT -->
+
     <main class="chat">
 
         {% if selected_group %}
+
+            <!-- CHAT HEADER -->
 
             <header class="chat-header">
 
@@ -77,6 +90,7 @@
 
                 </div>
 
+
                 <div class="chat-header-buttons">
 
                     <button
@@ -86,6 +100,7 @@
                         🔔 Aktiver varsler
                     </button>
 
+
                     {% if selected_group["owner_id"] == session["user_id"] %}
 
                         <form
@@ -94,7 +109,10 @@
                             onsubmit="return confirm('Er du sikker på at du vil slette denne gruppen?');"
                         >
 
-                            <button class="delete-group-button">
+                            <button
+                                type="submit"
+                                class="delete-group-button"
+                            >
                                 Slett gruppe
                             </button>
 
@@ -106,6 +124,8 @@
 
             </header>
 
+
+            <!-- MELDINGER -->
 
             <section
                 class="messages"
@@ -155,6 +175,8 @@
             </section>
 
 
+            <!-- SKRIV MELDING -->
+
             <footer class="message-box">
 
                 <form
@@ -168,20 +190,13 @@
                         value="{{ selected_group['id'] }}"
                     >
 
-                    <div class="user-search">
-
-    <input
-        type="text"
-        id="username-search"
-        name="username"
-        placeholder="Skriv brukernavn..."
-        autocomplete="off"
-        required
-    >
-
-    <div id="user-results" class="user-results"></div>
-
-</div>
+                    <input
+                        type="text"
+                        name="content"
+                        placeholder="Skriv en melding..."
+                        autocomplete="off"
+                        required
+                    >
 
                     <button type="submit">
                         SEND
@@ -198,7 +213,9 @@
 
                 <div>
 
-                    <h2>Velkommen til MiniChat 👋</h2>
+                    <h2>
+                        Velkommen til MiniChat 👋
+                    </h2>
 
                     <p>
                         Velg en gruppe til venstre,
@@ -214,13 +231,18 @@
     </main>
 
 
+    <!-- MEDLEMMER -->
+
     {% if selected_group %}
 
         <aside class="members-sidebar">
 
             <div class="members-header">
 
-                <h3>MEDLEMMER</h3>
+                <h3>
+                    MEDLEMMER
+                </h3>
+
 
                 {% if selected_group["owner_id"] == session["user_id"] %}
 
@@ -245,6 +267,7 @@
                         <div class="avatar">
                             {{ member["username"][0]|upper }}
                         </div>
+
 
                         <span>
 
@@ -271,7 +294,10 @@
                             onsubmit="return confirm('Fjerne dette medlemmet fra gruppen?');"
                         >
 
-                            <button class="remove-member">
+                            <button
+                                type="submit"
+                                class="remove-member"
+                            >
                                 ×
                             </button>
 
@@ -290,13 +316,21 @@
 </div>
 
 
+<!-- ===================================== -->
 <!-- OPPRETT GRUPPE -->
+<!-- ===================================== -->
 
-<div id="group-window" class="group-window">
+<div
+    id="group-window"
+    class="group-window"
+>
 
     <div class="group-box">
 
-        <h2>Opprett gruppe</h2>
+        <h2>
+            Opprett gruppe
+        </h2>
+
 
         <form
             action="{{ url_for('create_group') }}"
@@ -311,6 +345,7 @@
                 required
             >
 
+
             <div class="group-actions">
 
                 <button
@@ -320,7 +355,10 @@
                     Avbryt
                 </button>
 
-                <button type="submit">
+
+                <button
+                    type="submit"
+                >
                     Opprett
                 </button>
 
@@ -333,28 +371,51 @@
 </div>
 
 
+<!-- ===================================== -->
 <!-- LEGG TIL MEDLEM -->
+<!-- ===================================== -->
 
 {% if selected_group %}
 
-<div id="member-window" class="group-window">
+<div
+    id="member-window"
+    class="group-window"
+>
 
     <div class="group-box">
 
-        <h2>Legg til medlem</h2>
+        <h2>
+            Legg til medlem
+        </h2>
+
 
         <form
             action="{{ url_for('add_member', group_id=selected_group['id']) }}"
             method="POST"
         >
 
-            <input
-                type="text"
-                name="username"
-                placeholder="Skriv brukernavn..."
-                autocomplete="off"
-                required
-            >
+            <!-- BRUKERSØK -->
+
+            <div class="user-search">
+
+                <input
+                    type="text"
+                    id="username-search"
+                    name="username"
+                    placeholder="Skriv brukernavn..."
+                    autocomplete="off"
+                    maxlength="50"
+                    required
+                >
+
+
+                <div
+                    id="user-results"
+                    class="user-results"
+                ></div>
+
+            </div>
+
 
             <div class="group-actions">
 
@@ -365,7 +426,10 @@
                     Avbryt
                 </button>
 
-                <button type="submit">
+
+                <button
+                    type="submit"
+                >
                     Legg til
                 </button>
 

@@ -43,6 +43,10 @@
 
                 {% endfor %}
 
+                <div class="sidebar-footer">
+    Laget av <strong>PeakLabs</strong>
+</div>
+
             {% else %}
 
                 <p class="no-groups">
@@ -66,6 +70,13 @@
         >
             👤 Profil
         </a>
+
+        <a
+    href="{{ url_for('info') }}"
+    class="profile-link"
+>
+    ℹ️ Info
+</a>
 
         <a
     href="{{ url_for('rules') }}"

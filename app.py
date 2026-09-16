@@ -66,6 +66,10 @@ def group(group_id):
         WHERE id = ?
     """, (group_id,)).fetchone()
 
+    if not selected_group:
+        connection.close()
+        return redirect(url_for("home"))
+
     groups = connection.execute("""
         SELECT groups.*
         FROM groups
@@ -79,6 +83,7 @@ def group(group_id):
         SELECT messages.id,
                messages.content,
                messages.created_at,
+               messages.user_id,
                users.username
         FROM messages
         JOIN users
@@ -109,7 +114,7 @@ def group(group_id):
 
 
 # -------------------------------------------------
-# HENT NYE MELDINGER
+# HENT MELDINGER
 # -------------------------------------------------
 
 @app.route("/messages/<int:group_id>")
@@ -169,8 +174,11 @@ def send_message():
     if "user_id" not in session:
         return redirect(url_for("login"))
 
-    content = request.form["content"].strip()
-    group_id = request.form["group_id"]
+    content = request.form.get("content", "").strip()
+    group_id = request.form.get("group_id")
+
+    if not group_id:
+        return redirect(url_for("home"))
 
     if content == "":
         return redirect(url_for("group", group_id=group_id))
@@ -213,7 +221,7 @@ def create_group():
     if "user_id" not in session:
         return redirect(url_for("login"))
 
-    group_name = request.form["group_name"].strip()
+    group_name = request.form.get("group_name", "").strip()
 
     if group_name == "":
         return redirect(url_for("home"))
@@ -319,6 +327,7 @@ def remove_member(group_id, user_id):
         connection.close()
         return redirect(url_for("group", group_id=group_id))
 
+    # Eieren kan ikke fjernes
     if user_id == group["owner_id"]:
         connection.close()
         return redirect(url_for("group", group_id=group_id))
@@ -347,10 +356,14 @@ def add_member(group_id):
     if "user_id" not in session:
         return redirect(url_for("login"))
 
-    username = request.form["username"].strip()
+    username = request.form.get("username", "").strip()
+
+    if username == "":
+        return redirect(url_for("group", group_id=group_id))
 
     connection = get_database()
 
+    # Finn gruppen
     group = connection.execute("""
         SELECT *
         FROM groups
@@ -361,12 +374,14 @@ def add_member(group_id):
         connection.close()
         return redirect(url_for("home"))
 
+    # Bare eieren kan legge til medlemmer
     if group["owner_id"] != session["user_id"]:
         connection.close()
         return redirect(url_for("group", group_id=group_id))
 
+    # Finn brukeren
     user = connection.execute("""
-        SELECT *
+        SELECT id, username
         FROM users
         WHERE username = ?
     """, (username,)).fetchone()
@@ -375,8 +390,9 @@ def add_member(group_id):
         connection.close()
         return redirect(url_for("group", group_id=group_id))
 
+    # Sjekk om brukeren allerede er medlem
     already_member = connection.execute("""
-        SELECT *
+        SELECT 1
         FROM group_members
         WHERE group_id = ? AND user_id = ?
     """, (
@@ -403,25 +419,27 @@ def add_member(group_id):
 
 
 # -------------------------------------------------
-# BRUKERSØK
+# SØK ETTER BRUKERE
 # -------------------------------------------------
 
 @app.route("/search_users/<int:group_id>")
 def search_users(group_id):
 
     if "user_id" not in session:
-        return {"users": []}
+        return jsonify({"users": []})
 
     connection = get_database()
 
-    group = connection.execute(
-        "SELECT owner_id FROM groups WHERE id = ?",
-        (group_id,)
-    ).fetchone()
+    # Bare eieren får søke etter brukere til gruppen
+    group = connection.execute("""
+        SELECT owner_id
+        FROM groups
+        WHERE id = ?
+    """, (group_id,)).fetchone()
 
     if not group or group["owner_id"] != session["user_id"]:
         connection.close()
-        return {"users": []}
+        return jsonify({"users": []})
 
     search = request.args.get("q", "").strip()
 
@@ -445,7 +463,7 @@ def search_users(group_id):
 
     connection.close()
 
-    return {
+    return jsonify({
         "users": [
             {
                 "id": user["id"],
@@ -453,7 +471,7 @@ def search_users(group_id):
             }
             for user in users
         ]
-    }
+    })
 
 
 # -------------------------------------------------
@@ -465,8 +483,11 @@ def register():
 
     if request.method == "POST":
 
-        username = request.form["username"].strip()
-        password = request.form["password"]
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "")
+
+        if username == "" or password == "":
+            return "Fyll inn brukernavn og passord!"
 
         password_hash = generate_password_hash(password)
 
@@ -507,8 +528,8 @@ def login():
 
     if request.method == "POST":
 
-        username = request.form["username"].strip()
-        password = request.form["password"]
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "")
 
         connection = get_database()
 
@@ -547,5 +568,9 @@ def logout():
     return redirect(url_for("login"))
 
 
+# -------------------------------------------------
+# START
+# -------------------------------------------------
+
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)

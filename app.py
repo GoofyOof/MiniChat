@@ -13,6 +13,10 @@ def get_database():
     return connection
 
 
+# =========================================
+# HJEM
+# =========================================
+
 @app.route("/")
 def home():
 
@@ -41,6 +45,10 @@ def home():
         members=[]
     )
 
+
+# =========================================
+# GRUPPE
+# =========================================
 
 @app.route("/group/<int:group_id>")
 def group(group_id):
@@ -80,11 +88,13 @@ def group(group_id):
     """, (session["user_id"],)).fetchall()
 
     messages = connection.execute("""
-        SELECT messages.id,
-               messages.content,
-               messages.created_at,
-               messages.user_id,
-               users.username
+        SELECT
+            messages.id,
+            messages.content,
+            messages.created_at,
+            messages.user_id,
+            messages.edited,
+            users.username
         FROM messages
         JOIN users
         ON messages.user_id = users.id
@@ -93,7 +103,9 @@ def group(group_id):
     """, (group_id,)).fetchall()
 
     members = connection.execute("""
-        SELECT users.id, users.username
+        SELECT
+            users.id,
+            users.username
         FROM users
         JOIN group_members
         ON users.id = group_members.user_id
@@ -113,9 +125,9 @@ def group(group_id):
     )
 
 
-# -------------------------------------------------
+# =========================================
 # HENT MELDINGER
-# -------------------------------------------------
+# =========================================
 
 @app.route("/messages/<int:group_id>")
 def get_messages(group_id):
@@ -136,11 +148,13 @@ def get_messages(group_id):
         return jsonify({"messages": []})
 
     messages = connection.execute("""
-        SELECT messages.id,
-               messages.content,
-               messages.created_at,
-               messages.user_id,
-               users.username
+        SELECT
+            messages.id,
+            messages.content,
+            messages.created_at,
+            messages.user_id,
+            messages.edited,
+            users.username
         FROM messages
         JOIN users
         ON messages.user_id = users.id
@@ -157,6 +171,7 @@ def get_messages(group_id):
                 "content": message["content"],
                 "created_at": message["created_at"],
                 "user_id": message["user_id"],
+                "edited": message["edited"],
                 "username": message["username"]
             }
             for message in messages
@@ -164,9 +179,9 @@ def get_messages(group_id):
     })
 
 
-# -------------------------------------------------
+# =========================================
 # SEND MELDING
-# -------------------------------------------------
+# =========================================
 
 @app.route("/send_message", methods=["POST"])
 def send_message():
@@ -211,9 +226,166 @@ def send_message():
     return redirect(url_for("group", group_id=group_id))
 
 
-# -------------------------------------------------
+# =========================================
+# REDIGER MELDING
+# =========================================
+
+@app.route("/edit_message/<int:message_id>", methods=["POST"])
+def edit_message(message_id):
+
+    if "user_id" not in session:
+        return jsonify({
+            "success": False,
+            "error": "Ikke innlogget"
+        }), 401
+
+    data = request.get_json(silent=True) or {}
+
+    content = data.get("content", "").strip()
+
+    if content == "":
+        return jsonify({
+            "success": False,
+            "error": "Meldingen kan ikke være tom"
+        }), 400
+
+    connection = get_database()
+
+    message = connection.execute("""
+        SELECT
+            id,
+            content,
+            user_id,
+            group_id
+        FROM messages
+        WHERE id = ?
+    """, (message_id,)).fetchone()
+
+    if not message:
+        connection.close()
+        return jsonify({
+            "success": False,
+            "error": "Meldingen finnes ikke"
+        }), 404
+
+    if message["user_id"] != session["user_id"]:
+        connection.close()
+        return jsonify({
+            "success": False,
+            "error": "Du kan bare redigere dine egne meldinger"
+        }), 403
+
+    membership = connection.execute("""
+        SELECT *
+        FROM group_members
+        WHERE group_id = ?
+        AND user_id = ?
+    """, (
+        message["group_id"],
+        session["user_id"]
+    )).fetchone()
+
+    if not membership:
+        connection.close()
+        return jsonify({
+            "success": False,
+            "error": "Du er ikke medlem av denne gruppen"
+        }), 403
+
+    connection.execute("""
+        UPDATE messages
+        SET content = ?,
+            edited = 1
+        WHERE id = ?
+    """, (
+        content,
+        message_id
+    ))
+
+    connection.commit()
+    connection.close()
+
+    return jsonify({
+        "success": True,
+        "content": content,
+        "edited": True
+    })
+
+
+# =========================================
+# SLETT MELDING
+# =========================================
+
+@app.route("/delete_message/<int:message_id>", methods=["POST"])
+def delete_message(message_id):
+
+    if "user_id" not in session:
+        return jsonify({
+            "success": False,
+            "error": "Ikke innlogget"
+        }), 401
+
+    connection = get_database()
+
+    message = connection.execute("""
+        SELECT
+            id,
+            user_id,
+            group_id
+        FROM messages
+        WHERE id = ?
+    """, (message_id,)).fetchone()
+
+    if not message:
+        connection.close()
+        return jsonify({
+            "success": False,
+            "error": "Meldingen finnes ikke"
+        }), 404
+
+    # Bare den som skrev meldingen kan slette den
+    if message["user_id"] != session["user_id"]:
+        connection.close()
+        return jsonify({
+            "success": False,
+            "error": "Du kan bare slette dine egne meldinger"
+        }), 403
+
+    # Sjekk at brukeren fortsatt er medlem av gruppen
+    membership = connection.execute("""
+        SELECT *
+        FROM group_members
+        WHERE group_id = ?
+        AND user_id = ?
+    """, (
+        message["group_id"],
+        session["user_id"]
+    )).fetchone()
+
+    if not membership:
+        connection.close()
+        return jsonify({
+            "success": False,
+            "error": "Du er ikke medlem av denne gruppen"
+        }), 403
+
+    connection.execute("""
+        DELETE FROM messages
+        WHERE id = ?
+    """, (message_id,))
+
+    connection.commit()
+    connection.close()
+
+    return jsonify({
+        "success": True,
+        "message_id": message_id
+    })
+
+
+# =========================================
 # OPPRETT GRUPPE
-# -------------------------------------------------
+# =========================================
 
 @app.route("/create_group", methods=["POST"])
 def create_group():
@@ -254,9 +426,9 @@ def create_group():
     return redirect(url_for("group", group_id=group_id))
 
 
-# -------------------------------------------------
+# =========================================
 # SLETT GRUPPE
-# -------------------------------------------------
+# =========================================
 
 @app.route("/delete_group/<int:group_id>", methods=["POST"])
 def delete_group(group_id):
@@ -301,9 +473,9 @@ def delete_group(group_id):
     return redirect(url_for("home"))
 
 
-# -------------------------------------------------
+# =========================================
 # FJERN MEDLEM
-# -------------------------------------------------
+# =========================================
 
 @app.route("/remove_member/<int:group_id>/<int:user_id>", methods=["POST"])
 def remove_member(group_id, user_id):
@@ -327,7 +499,6 @@ def remove_member(group_id, user_id):
         connection.close()
         return redirect(url_for("group", group_id=group_id))
 
-    # Eieren kan ikke fjernes
     if user_id == group["owner_id"]:
         connection.close()
         return redirect(url_for("group", group_id=group_id))
@@ -346,9 +517,9 @@ def remove_member(group_id, user_id):
     return redirect(url_for("group", group_id=group_id))
 
 
-# -------------------------------------------------
+# =========================================
 # LEGG TIL MEDLEM
-# -------------------------------------------------
+# =========================================
 
 @app.route("/add_member/<int:group_id>", methods=["POST"])
 def add_member(group_id):
@@ -363,7 +534,6 @@ def add_member(group_id):
 
     connection = get_database()
 
-    # Finn gruppen
     group = connection.execute("""
         SELECT *
         FROM groups
@@ -374,12 +544,10 @@ def add_member(group_id):
         connection.close()
         return redirect(url_for("home"))
 
-    # Bare eieren kan legge til medlemmer
     if group["owner_id"] != session["user_id"]:
         connection.close()
         return redirect(url_for("group", group_id=group_id))
 
-    # Finn brukeren
     user = connection.execute("""
         SELECT id, username
         FROM users
@@ -390,7 +558,6 @@ def add_member(group_id):
         connection.close()
         return redirect(url_for("group", group_id=group_id))
 
-    # Sjekk om brukeren allerede er medlem
     already_member = connection.execute("""
         SELECT 1
         FROM group_members
@@ -418,9 +585,9 @@ def add_member(group_id):
     return redirect(url_for("group", group_id=group_id))
 
 
-# -------------------------------------------------
-# SØK ETTER BRUKERE
-# -------------------------------------------------
+# =========================================
+# BRUKERSØK
+# =========================================
 
 @app.route("/search_users/<int:group_id>")
 def search_users(group_id):
@@ -430,7 +597,6 @@ def search_users(group_id):
 
     connection = get_database()
 
-    # Bare eieren får søke etter brukere til gruppen
     group = connection.execute("""
         SELECT owner_id
         FROM groups
@@ -444,7 +610,9 @@ def search_users(group_id):
     search = request.args.get("q", "").strip()
 
     users = connection.execute("""
-        SELECT users.id, users.username
+        SELECT
+            users.id,
+            users.username
         FROM users
         WHERE users.username LIKE ?
         AND users.id != ?
@@ -474,17 +642,24 @@ def search_users(group_id):
     })
 
 
-# -------------------------------------------------
-# REGISTER
-# -------------------------------------------------
+# =========================================
+# REGISTRERING
+# =========================================
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
 
     if request.method == "POST":
 
-        username = request.form.get("username", "").strip()
-        password = request.form.get("password", "")
+        username = request.form.get(
+            "username",
+            ""
+        ).strip()
+
+        password = request.form.get(
+            "password",
+            ""
+        )
 
         if username == "" or password == "":
             return "Fyll inn brukernavn og passord!"
@@ -519,17 +694,24 @@ def register():
     return render_template("register.html")
 
 
-# -------------------------------------------------
+# =========================================
 # LOGIN
-# -------------------------------------------------
+# =========================================
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
 
     if request.method == "POST":
 
-        username = request.form.get("username", "").strip()
-        password = request.form.get("password", "")
+        username = request.form.get(
+            "username",
+            ""
+        ).strip()
+
+        password = request.form.get(
+            "password",
+            ""
+        )
 
         connection = get_database()
 
@@ -555,10 +737,176 @@ def login():
 
     return render_template("login.html")
 
+# =========================================
+# PROFIL
+# =========================================
 
-# -------------------------------------------------
-# LOGOUT
-# -------------------------------------------------
+@app.route("/profile")
+def profile():
+
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    return user_profile(session["user_id"], own_profile=True)
+
+
+@app.route("/user/<int:user_id>")
+def public_profile(user_id):
+
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    return user_profile(
+        user_id,
+        own_profile=(user_id == session["user_id"])
+    )
+
+
+def user_profile(user_id, own_profile=False):
+
+    connection = get_database()
+
+    user = connection.execute("""
+        SELECT
+            id,
+            username,
+            display_name,
+            bio,
+            created_at
+        FROM users
+        WHERE id = ?
+    """, (user_id,)).fetchone()
+
+    if not user:
+        connection.close()
+        return redirect(url_for("home"))
+
+    message_count = connection.execute("""
+        SELECT COUNT(*) AS count
+        FROM messages
+        WHERE user_id = ?
+    """, (user_id,)).fetchone()["count"]
+
+    group_count = connection.execute("""
+        SELECT COUNT(*) AS count
+        FROM group_members
+        WHERE user_id = ?
+    """, (user_id,)).fetchone()["count"]
+
+    connection.close()
+
+    return render_template(
+        "profile.html",
+        user=user,
+        message_count=message_count,
+        group_count=group_count,
+        own_profile=own_profile
+    )
+
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    connection = get_database()
+
+    user = connection.execute("""
+        SELECT
+            id,
+            username,
+            display_name,
+            bio,
+            created_at
+        FROM users
+        WHERE id = ?
+    """, (session["user_id"],)).fetchone()
+
+    if not user:
+        connection.close()
+        return redirect(url_for("logout"))
+
+    message_count = connection.execute("""
+        SELECT COUNT(*) AS count
+        FROM messages
+        WHERE user_id = ?
+    """, (session["user_id"],)).fetchone()["count"]
+
+    group_count = connection.execute("""
+        SELECT COUNT(*) AS count
+        FROM group_members
+        WHERE user_id = ?
+    """, (session["user_id"],)).fetchone()["count"]
+
+    connection.close()
+
+    return render_template(
+        "profile.html",
+        user=user,
+        message_count=message_count,
+        group_count=group_count
+    )
+
+
+# =========================================
+# REDIGER PROFIL
+# =========================================
+
+@app.route("/edit_profile", methods=["GET", "POST"])
+def edit_profile():
+
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    connection = get_database()
+
+    if request.method == "POST":
+
+        display_name = request.form.get(
+            "display_name",
+            ""
+        ).strip()
+
+        bio = request.form.get(
+            "bio",
+            ""
+        ).strip()
+
+        if display_name == "":
+            display_name = session["username"]
+
+        connection.execute("""
+            UPDATE users
+            SET display_name = ?,
+                bio = ?
+            WHERE id = ?
+        """, (
+            display_name,
+            bio,
+            session["user_id"]
+        ))
+
+        connection.commit()
+        connection.close()
+
+        return redirect(url_for("profile"))
+
+    user = connection.execute("""
+        SELECT
+            username,
+            display_name,
+            bio
+        FROM users
+        WHERE id = ?
+    """, (session["user_id"],)).fetchone()
+
+    connection.close()
+
+    return render_template(
+        "edit_profile.html",
+        user=user
+    )
+
+# =========================================
+# LOGG UT
+# =========================================
 
 @app.route("/logout")
 def logout():
@@ -568,9 +916,9 @@ def logout():
     return redirect(url_for("login"))
 
 
-# -------------------------------------------------
+# =========================================
 # START
-# -------------------------------------------------
+# =========================================
 
 if __name__ == "__main__":
     app.run(debug=True)

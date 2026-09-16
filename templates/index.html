@@ -1,7 +1,11 @@
 <!DOCTYPE html>
-<html>
+<html lang="no">
 
 <head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>MiniChat</title>
 
@@ -34,9 +38,7 @@
                         href="{{ url_for('group', group_id=group['id']) }}"
                         class="group-button {% if selected_group and selected_group['id'] == group['id'] %}active{% endif %}"
                     >
-
                         💬 {{ group["name"] }}
-
                     </a>
 
                 {% endfor %}
@@ -51,7 +53,6 @@
 
         </div>
 
-
         <button
             class="create-group-button"
             onclick="openGroupWindow()"
@@ -59,12 +60,18 @@
             + Opprett gruppe
         </button>
 
+        <a
+            href="{{ url_for('profile') }}"
+            class="profile-link"
+        >
+            👤 Profil
+        </a>
 
         <a
             href="{{ url_for('logout') }}"
             class="logout-button"
         >
-            Logg ut
+            🚪 Logg ut
         </a>
 
     </aside>
@@ -76,20 +83,19 @@
 
         {% if selected_group %}
 
-            <!-- CHAT HEADER -->
-
             <header class="chat-header">
 
                 <div>
 
-                    💬 {{ selected_group["name"] }}
+                    <div>
+                        💬 {{ selected_group["name"] }}
+                    </div>
 
                     <small>
                         {{ members|length }} medlemmer
                     </small>
 
                 </div>
-
 
                 <div class="chat-header-buttons">
 
@@ -99,7 +105,6 @@
                     >
                         🔔 Aktiver varsler
                     </button>
-
 
                     {% if selected_group["owner_id"] == session["user_id"] %}
 
@@ -142,13 +147,54 @@
                             data-message-id="{{ message['id'] }}"
                         >
 
-                            <strong>
-                                {{ message["username"] }}
-                            </strong>
+                            <div class="message-top">
 
-                            <p>
+                                <strong>
+                                    {{ message["username"] }}
+                                </strong>
+
+                                {% if message["user_id"] == session["user_id"] %}
+
+                                    <div class="message-actions">
+
+                                        <button
+                                            type="button"
+                                            class="message-menu-button"
+                                            data-edit-message="{{ message['id'] }}"
+                                            title="Rediger melding"
+                                        >
+                                            ✏️
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            class="message-menu-button delete-message-button"
+                                            data-delete-message="{{ message['id'] }}"
+                                            title="Slett melding"
+                                        >
+                                            🗑️
+                                        </button>
+
+                                    </div>
+
+                                {% endif %}
+
+                            </div>
+
+
+                            <p class="message-content">
                                 {{ message["content"] }}
                             </p>
+
+
+                            {% if message["edited"] %}
+
+                                <small class="edited-label">
+                                    redigert
+                                </small>
+
+                            {% endif %}
+
 
                             <small>
                                 {{ message["created_at"] }}
@@ -162,7 +208,9 @@
 
                     <div class="empty-chat">
 
-                        <h2>Ingen meldinger ennå</h2>
+                        <h2>
+                            Ingen meldinger ennå
+                        </h2>
 
                         <p>
                             Start samtalen!
@@ -243,7 +291,6 @@
                     MEDLEMMER
                 </h3>
 
-
                 {% if selected_group["owner_id"] == session["user_id"] %}
 
                     <button
@@ -268,20 +315,24 @@
                             {{ member["username"][0]|upper }}
                         </div>
 
+<span>
 
-                        <span>
+    <a
+        href="{{ url_for('public_profile', user_id=member['id']) }}"
+        class="member-profile-link"
+    >
+        {{ member["username"] }}
+    </a>
 
-                            {{ member["username"] }}
+    {% if member["id"] == selected_group["owner_id"] %}
 
-                            {% if member["id"] == selected_group["owner_id"] %}
+        <small>
+            Eier
+        </small>
 
-                                <small>
-                                    Eier
-                                </small>
+    {% endif %}
 
-                            {% endif %}
-
-                        </span>
+</span>
 
                     </div>
 
@@ -316,9 +367,9 @@
 </div>
 
 
-<!-- ===================================== -->
+<!-- ========================================= -->
 <!-- OPPRETT GRUPPE -->
-<!-- ===================================== -->
+<!-- ========================================= -->
 
 <div
     id="group-window"
@@ -330,7 +381,6 @@
         <h2>
             Opprett gruppe
         </h2>
-
 
         <form
             action="{{ url_for('create_group') }}"
@@ -345,7 +395,6 @@
                 required
             >
 
-
             <div class="group-actions">
 
                 <button
@@ -354,7 +403,6 @@
                 >
                     Avbryt
                 </button>
-
 
                 <button
                     type="submit"
@@ -371,9 +419,9 @@
 </div>
 
 
-<!-- ===================================== -->
+<!-- ========================================= -->
 <!-- LEGG TIL MEDLEM -->
-<!-- ===================================== -->
+<!-- ========================================= -->
 
 {% if selected_group %}
 
@@ -388,13 +436,10 @@
             Legg til medlem
         </h2>
 
-
         <form
             action="{{ url_for('add_member', group_id=selected_group['id']) }}"
             method="POST"
         >
-
-            <!-- BRUKERSØK -->
 
             <div class="user-search">
 
@@ -408,14 +453,12 @@
                     required
                 >
 
-
                 <div
                     id="user-results"
                     class="user-results"
                 ></div>
 
             </div>
-
 
             <div class="group-actions">
 
@@ -425,7 +468,6 @@
                 >
                     Avbryt
                 </button>
-
 
                 <button
                     type="submit"

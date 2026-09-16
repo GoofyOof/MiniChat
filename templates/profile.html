@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="no">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{{ user['display_name'] or user['username'] }} - MiniChat</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+</head>
+
+<body>
+
+    <div class="profile-page">
+
+        <div class="profile-card">
+
+            <div class="profile-header">
+
+                <a
+                    href="{{ url_for('home') }}"
+                    class="profile-back"
+                >
+                    ← Tilbake
+                </a>
+
+                <h1>Profil</h1>
+
+            </div>
+
+
+            <div class="profile-info">
+
+                <div class="profile-name">
+
+                    <h2>
+                        {{ user['display_name'] or user['username'] }}
+                    </h2>
+
+                    <p class="profile-username">
+                        @{{ user['username'] }}
+                    </p>
+
+                </div>
+
+
+                <div class="profile-bio">
+
+                    {% if user['bio'] %}
+
+                        <p>
+                            {{ user['bio'] }}
+                        </p>
+
+                    {% else %}
+
+                        <p class="profile-empty">
+                            Ingen bio enda.
+                        </p>
+
+                    {% endif %}
+
+                </div>
+
+
+                <div class="profile-stats">
+
+                    <div class="profile-stat">
+
+                        <strong>
+                            {{ message_count }}
+                        </strong>
+
+                        <span>
+                            Meldinger
+                        </span>
+
+                    </div>
+
+
+                    <div class="profile-stat">
+
+                        <strong>
+                            {{ group_count }}
+                        </strong>
+
+                        <span>
+                            Grupper
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                {% if user['created_at'] %}
+
+                    <div class="profile-created">
+
+                        <span>
+                            Konto opprettet:
+                        </span>
+
+                        <span>
+                            {{ user['created_at'] }}
+                        </span>
+
+                    </div>
+
+                {% endif %}
+
+
+                {% if own_profile %}
+
+                    <div class="profile-buttons">
+
+                        <a
+                            href="{{ url_for('edit_profile') }}"
+                            class="profile-button"
+                        >
+                            ✏️ Rediger profil
+                        </a>
+
+                        <a
+                            href="{{ url_for('logout') }}"
+                            class="profile-button logout-button"
+                        >
+                            🚪 Logg ut
+                        </a>
+
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+</body>
+
+</html>

@@ -2,41 +2,40 @@ import sqlite3
 
 connection = sqlite3.connect("database.db")
 
-cursor = connection.cursor()
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT UNIQUE NOT NULL,
-    password TEXT NOT NULL
-)
-""")
+# =========================================
+# USERS
+# =========================================
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS groups (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    owner_id INTEGER
-)
-""")
+try:
+    connection.execute("""
+        ALTER TABLE users
+        ADD COLUMN display_name TEXT
+    """)
+    print("display_name lagt til.")
+except sqlite3.OperationalError:
+    print("display_name finnes allerede.")
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS group_members (
-    group_id INTEGER NOT NULL,
-    user_id INTEGER NOT NULL,
-    UNIQUE(group_id, user_id)
-)
-""")
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS messages (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    content TEXT NOT NULL,
-    user_id INTEGER,
-    group_id INTEGER,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)
-""")
+try:
+    connection.execute("""
+        ALTER TABLE users
+        ADD COLUMN bio TEXT DEFAULT ''
+    """)
+    print("bio lagt til.")
+except sqlite3.OperationalError:
+    print("bio finnes allerede.")
+
+
+try:
+    connection.execute("""
+        ALTER TABLE users
+        ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    """)
+    print("created_at lagt til.")
+except sqlite3.OperationalError:
+    print("created_at finnes allerede.")
+
 
 connection.commit()
 connection.close()

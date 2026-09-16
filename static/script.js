@@ -5,7 +5,6 @@
 const messageInput =
     document.querySelector(".message-box input[name='content']");
 
-
 if (messageInput) {
 
     messageInput.addEventListener(
@@ -36,9 +35,7 @@ function openGroupWindow() {
         document.getElementById("group-window");
 
     if (windowElement) {
-
         windowElement.style.display = "flex";
-
     }
 
 }
@@ -50,9 +47,7 @@ function closeGroupWindow() {
         document.getElementById("group-window");
 
     if (windowElement) {
-
         windowElement.style.display = "none";
-
     }
 
 }
@@ -73,26 +68,21 @@ function openMemberWindow() {
 
     windowElement.style.display = "flex";
 
-
     const searchInput =
         document.getElementById("username-search");
 
     if (searchInput) {
 
         searchInput.value = "";
-
         searchInput.focus();
 
     }
-
 
     const results =
         document.getElementById("user-results");
 
     if (results) {
-
         results.innerHTML = "";
-
     }
 
 }
@@ -104,9 +94,7 @@ function closeMemberWindow() {
         document.getElementById("member-window");
 
     if (windowElement) {
-
         windowElement.style.display = "none";
-
     }
 
 }
@@ -125,13 +113,10 @@ async function enableNotifications() {
         );
 
         return;
-
     }
-
 
     const permission =
         await Notification.requestPermission();
-
 
     if (permission === "granted") {
 
@@ -141,7 +126,6 @@ async function enableNotifications() {
                 body: "Varsler er nå aktivert! 🔔"
             }
         );
-
 
         localStorage.setItem(
             "minichat_notifications",
@@ -166,15 +150,15 @@ async function enableNotifications() {
 const messagesContainer =
     document.getElementById("messages");
 
-
 let lastMessageId = 0;
 
 
 if (messagesContainer) {
 
     const existingMessages =
-        messagesContainer.querySelectorAll(".message");
-
+        messagesContainer.querySelectorAll(
+            "[data-message-id]"
+        );
 
     existingMessages.forEach(
         function(message) {
@@ -184,11 +168,11 @@ if (messagesContainer) {
                     message.dataset.messageId
                 );
 
-
-            if (id > lastMessageId) {
-
+            if (
+                !isNaN(id) &&
+                id > lastMessageId
+            ) {
                 lastMessageId = id;
-
             }
 
         }
@@ -218,10 +202,12 @@ async function updateMessages() {
         return;
     }
 
-
     const groupId =
         messagesContainer.dataset.groupId;
 
+    if (!groupId) {
+        return;
+    }
 
     try {
 
@@ -230,33 +216,106 @@ async function updateMessages() {
                 `/messages/${groupId}`
             );
 
-
         if (!response.ok) {
             return;
         }
 
-
         const data =
             await response.json();
 
-
         const messages =
-            data.messages;
+            data.messages || [];
 
 
-        if (messages.length === 0) {
-            return;
-        }
+        // =====================================
+        // OPPDATER EKSISTERENDE MELDINGER
+        // =====================================
 
+        messages.forEach(
+            function(message) {
+
+                const existing =
+                    messagesContainer.querySelector(
+                        `[data-message-id="${message.id}"]`
+                    );
+
+                if (!existing) {
+                    return;
+                }
+
+
+                const content =
+                    existing.querySelector(
+                        ".message-content"
+                    );
+
+                if (content) {
+
+                    content.textContent =
+                        message.content;
+
+                }
+
+
+                // Redigert-label
+
+                let editedLabel =
+                    existing.querySelector(
+                        ".edited-label"
+                    );
+
+
+                if (
+                    message.edited &&
+                    !editedLabel
+                ) {
+
+                    editedLabel =
+                        document.createElement("small");
+
+                    editedLabel.className =
+                        "edited-label";
+
+                    editedLabel.textContent =
+                        "redigert";
+
+
+                    const time =
+                        existing.querySelector(
+                            ".message-time"
+                        );
+
+
+                    if (time) {
+
+                        existing.insertBefore(
+                            editedLabel,
+                            time
+                        );
+
+                    } else {
+
+                        existing.appendChild(
+                            editedLabel
+                        );
+
+                    }
+
+                }
+
+            }
+        );
+
+
+        // =====================================
+        // NYE MELDINGER
+        // =====================================
 
         const newMessages =
             messages.filter(
                 function(message) {
 
-                    return (
-                        message.id >
-                        lastMessageId
-                    );
+                    return message.id > lastMessageId;
 
                 }
             );
@@ -267,22 +326,15 @@ async function updateMessages() {
         }
 
 
-        // Fjern "Ingen meldinger ennå"
-
         const emptyChat =
             messagesContainer.querySelector(
                 ".empty-chat"
             );
 
-
         if (emptyChat) {
-
             emptyChat.remove();
-
         }
 
-
-        // Legg til nye meldinger
 
         newMessages.forEach(
             function(message) {
@@ -290,47 +342,192 @@ async function updateMessages() {
                 const messageElement =
                     document.createElement("div");
 
-
                 messageElement.className =
                     "message";
-
 
                 messageElement.dataset.messageId =
                     message.id;
 
 
+                // ---------------------------------
+                // TOPP
+                // ---------------------------------
+
+                const messageTop =
+                    document.createElement("div");
+
+                messageTop.className =
+                    "message-top";
+
+
                 const username =
                     document.createElement("strong");
-
 
                 username.textContent =
                     message.username;
 
 
+                messageTop.appendChild(
+                    username
+                );
+
+
+                // ---------------------------------
+                // KNAPPER
+                // ---------------------------------
+
+                if (
+                    String(message.user_id) ===
+                    String(getCurrentUserId())
+                ) {
+
+                    const actions =
+                        document.createElement("div");
+
+                    actions.className =
+                        "message-actions";
+
+
+                    // Rediger
+
+                    const editButton =
+                        document.createElement("button");
+
+                    editButton.type =
+                        "button";
+
+                    editButton.className =
+                        "message-menu-button";
+
+                    editButton.dataset.editMessage =
+                        message.id;
+
+                    editButton.title =
+                        "Rediger melding";
+
+                    editButton.textContent =
+                        "✏️";
+
+
+                    editButton.addEventListener(
+                        "click",
+                        function() {
+
+                            startEditMessage(
+                                message.id
+                            );
+
+                        }
+                    );
+
+
+                    // Slett
+
+                    const deleteButton =
+                        document.createElement("button");
+
+                    deleteButton.type =
+                        "button";
+
+                    deleteButton.className =
+                        "message-menu-button delete-message-button";
+
+                    deleteButton.dataset.deleteMessage =
+                        message.id;
+
+                    deleteButton.title =
+                        "Slett melding";
+
+                    deleteButton.textContent =
+                        "🗑️";
+
+
+                    deleteButton.addEventListener(
+                        "click",
+                        function() {
+
+                            deleteMessage(
+                                message.id
+                            );
+
+                        }
+                    );
+
+
+                    actions.appendChild(
+                        editButton
+                    );
+
+                    actions.appendChild(
+                        deleteButton
+                    );
+
+
+                    messageTop.appendChild(
+                        actions
+                    );
+
+                }
+
+
+                messageElement.appendChild(
+                    messageTop
+                );
+
+
+                // ---------------------------------
+                // INNHOLD
+                // ---------------------------------
+
                 const content =
                     document.createElement("p");
 
+                content.className =
+                    "message-content";
 
                 content.textContent =
                     message.content;
 
 
-                const time =
-                    document.createElement("small");
-
-
-                time.textContent =
-                    message.created_at;
-
-
-                messageElement.appendChild(
-                    username
-                );
-
-
                 messageElement.appendChild(
                     content
                 );
+
+
+                // ---------------------------------
+                // REDIGERT
+                // ---------------------------------
+
+                if (message.edited) {
+
+                    const editedLabel =
+                        document.createElement("small");
+
+                    editedLabel.className =
+                        "edited-label";
+
+                    editedLabel.textContent =
+                        "redigert";
+
+                    messageElement.appendChild(
+                        editedLabel
+                    );
+
+                }
+
+
+                // ---------------------------------
+                // TID
+                // ---------------------------------
+
+                const time =
+                    document.createElement("small");
+
+                time.className =
+                    "message-time";
+
+                time.textContent =
+                    message.created_at;
 
 
                 messageElement.appendChild(
@@ -343,8 +540,9 @@ async function updateMessages() {
                 );
 
 
-                // Varsel hvis meldingen
-                // kommer fra en annen bruker
+                // ---------------------------------
+                // VARSEL
+                // ---------------------------------
 
                 if (
                     String(message.user_id) !==
@@ -363,10 +561,10 @@ async function updateMessages() {
 
 
         lastMessageId =
-            newMessages[newMessages.length - 1].id;
+            newMessages[
+                newMessages.length - 1
+            ].id;
 
-
-        // Scroll til bunnen
 
         messagesContainer.scrollTop =
             messagesContainer.scrollHeight;
@@ -385,6 +583,437 @@ async function updateMessages() {
 
 
 // =========================================
+// REDIGER MELDING
+// =========================================
+
+async function startEditMessage(messageId) {
+
+    if (!messagesContainer) {
+        return;
+    }
+
+    const messageElement =
+        messagesContainer.querySelector(
+            `[data-message-id="${messageId}"]`
+        );
+
+    if (!messageElement) {
+        return;
+    }
+
+
+    const contentElement =
+        messageElement.querySelector(
+            ".message-content"
+        );
+
+    if (!contentElement) {
+        return;
+    }
+
+
+    if (
+        messageElement.querySelector(
+            ".edit-message-box"
+        )
+    ) {
+        return;
+    }
+
+
+    const oldContent =
+        contentElement.textContent;
+
+
+    contentElement.style.display =
+        "none";
+
+
+    const editBox =
+        document.createElement("div");
+
+    editBox.className =
+        "edit-message-box";
+
+
+    const input =
+        document.createElement("input");
+
+    input.type =
+        "text";
+
+    input.className =
+        "edit-message-input";
+
+    input.value =
+        oldContent;
+
+    input.autocomplete =
+        "off";
+
+
+    const saveButton =
+        document.createElement("button");
+
+    saveButton.type =
+        "button";
+
+    saveButton.className =
+        "edit-message-save";
+
+    saveButton.textContent =
+        "Lagre";
+
+
+    const cancelButton =
+        document.createElement("button");
+
+    cancelButton.type =
+        "button";
+
+    cancelButton.className =
+        "edit-message-cancel";
+
+    cancelButton.textContent =
+        "Avbryt";
+
+
+    editBox.appendChild(
+        input
+    );
+
+    editBox.appendChild(
+        saveButton
+    );
+
+    editBox.appendChild(
+        cancelButton
+    );
+
+
+    contentElement.parentNode.insertBefore(
+        editBox,
+        contentElement.nextSibling
+    );
+
+
+    input.focus();
+    input.select();
+
+
+    function cancelEdit() {
+
+        editBox.remove();
+
+        contentElement.style.display =
+            "";
+
+    }
+
+
+    async function saveEdit() {
+
+        const newContent =
+            input.value.trim();
+
+
+        if (newContent === "") {
+
+            alert(
+                "Meldingen kan ikke være tom."
+            );
+
+            return;
+
+        }
+
+
+        saveButton.disabled =
+            true;
+
+
+        try {
+
+            const response =
+                await fetch(
+                    `/edit_message/${messageId}`,
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body: JSON.stringify({
+                            content: newContent
+                        })
+                    }
+                );
+
+
+            const data =
+                await response.json();
+
+
+            if (
+                !response.ok ||
+                !data.success
+            ) {
+
+                alert(
+                    data.error ||
+                    "Kunne ikke redigere meldingen."
+                );
+
+                saveButton.disabled =
+                    false;
+
+                return;
+
+            }
+
+
+            contentElement.textContent =
+                data.content;
+
+            contentElement.style.display =
+                "";
+
+
+            editBox.remove();
+
+
+            let editedLabel =
+                messageElement.querySelector(
+                    ".edited-label"
+                );
+
+
+            if (!editedLabel) {
+
+                editedLabel =
+                    document.createElement("small");
+
+                editedLabel.className =
+                    "edited-label";
+
+                editedLabel.textContent =
+                    "redigert";
+
+
+                const time =
+                    messageElement.querySelector(
+                        ".message-time"
+                    );
+
+
+                if (time) {
+
+                    messageElement.insertBefore(
+                        editedLabel,
+                        time
+                    );
+
+                } else {
+
+                    messageElement.appendChild(
+                        editedLabel
+                    );
+
+                }
+
+            }
+
+
+        } catch (error) {
+
+            console.log(
+                "Kunne ikke redigere melding:",
+                error
+            );
+
+            alert(
+                "Noe gikk galt."
+            );
+
+            saveButton.disabled =
+                false;
+
+        }
+
+    }
+
+
+    cancelButton.addEventListener(
+        "click",
+        cancelEdit
+    );
+
+
+    saveButton.addEventListener(
+        "click",
+        saveEdit
+    );
+
+
+    input.addEventListener(
+        "keydown",
+        function(event) {
+
+            if (event.key === "Escape") {
+
+                event.preventDefault();
+
+                cancelEdit();
+
+            }
+
+
+            if (
+                event.key === "Enter" &&
+                !event.shiftKey
+            ) {
+
+                event.preventDefault();
+
+                saveEdit();
+
+            }
+
+        }
+    );
+
+}
+
+
+// =========================================
+// SLETT MELDING
+// =========================================
+
+async function deleteMessage(messageId) {
+
+    const confirmed =
+        confirm(
+            "Er du sikker på at du vil slette denne meldingen?"
+        );
+
+
+    if (!confirmed) {
+        return;
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                `/delete_message/${messageId}`,
+                {
+                    method: "POST"
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (
+            !response.ok ||
+            !data.success
+        ) {
+
+            alert(
+                data.error ||
+                "Kunne ikke slette meldingen."
+            );
+
+            return;
+
+        }
+
+
+        const messageElement =
+            messagesContainer.querySelector(
+                `[data-message-id="${messageId}"]`
+            );
+
+
+        if (messageElement) {
+
+            messageElement.remove();
+
+        }
+
+
+    } catch (error) {
+
+        console.log(
+            "Kunne ikke slette melding:",
+            error
+        );
+
+        alert(
+            "Noe gikk galt."
+        );
+
+    }
+
+}
+
+
+// =========================================
+// KOBLE TIL KNAPPER SOM ALLEREDE FINNES
+// =========================================
+
+document.querySelectorAll(
+    "[data-edit-message]"
+).forEach(
+    function(button) {
+
+        button.addEventListener(
+            "click",
+            function() {
+
+                const messageId =
+                    button.dataset.editMessage;
+
+                startEditMessage(
+                    messageId
+                );
+
+            }
+        );
+
+    }
+);
+
+
+document.querySelectorAll(
+    "[data-delete-message]"
+).forEach(
+    function(button) {
+
+        button.addEventListener(
+            "click",
+            function() {
+
+                const messageId =
+                    button.dataset.deleteMessage;
+
+                deleteMessage(
+                    messageId
+                );
+
+            }
+        );
+
+    }
+);
+
+
+// =========================================
 // MELDINGSVARSEL
 // =========================================
 
@@ -397,16 +1026,12 @@ function showMessageNotification(
         return;
     }
 
-
     if (
         Notification.permission !==
         "granted"
     ) {
-
         return;
-
     }
-
 
     new Notification(
         "Ny melding fra " + username,
@@ -426,7 +1051,6 @@ const usernameSearch =
     document.getElementById(
         "username-search"
     );
-
 
 const userResults =
     document.getElementById(
@@ -460,9 +1084,7 @@ if (
 
 
             if (search.length === 0) {
-
                 return;
-
             }
 
 
@@ -502,6 +1124,11 @@ if (
             messages.dataset.groupId;
 
 
+        if (!groupId) {
+            return;
+        }
+
+
         try {
 
             const response =
@@ -531,19 +1158,15 @@ if (
                 const noResults =
                     document.createElement("div");
 
-
                 noResults.className =
                     "no-user-results";
-
 
                 noResults.textContent =
                     "Ingen brukere funnet";
 
-
                 userResults.appendChild(
                     noResults
                 );
-
 
                 return;
 
@@ -558,10 +1181,8 @@ if (
                             "button"
                         );
 
-
                     userElement.type =
                         "button";
-
 
                     userElement.className =
                         "user-result";
@@ -572,10 +1193,8 @@ if (
                             "div"
                         );
 
-
                     avatar.className =
                         "user-result-avatar";
-
 
                     avatar.textContent =
                         user.username
@@ -588,7 +1207,6 @@ if (
                             "span"
                         );
 
-
                     name.textContent =
                         user.username;
 
@@ -596,7 +1214,6 @@ if (
                     userElement.appendChild(
                         avatar
                     );
-
 
                     userElement.appendChild(
                         name
@@ -609,7 +1226,6 @@ if (
 
                             usernameSearch.value =
                                 user.username;
-
 
                             userResults.innerHTML =
                                 "";

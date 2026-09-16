@@ -701,3 +701,433 @@ body {
     color: #888;
     font-size: 13px;
 }
+
+/* =========================================
+   MOBILVENNLIG DESIGN
+   ========================================= */
+
+@media (max-width: 768px) {
+
+    body {
+        overflow: hidden;
+    }
+
+    .app {
+        display: flex;
+        width: 100%;
+        height: 100vh;
+    }
+
+
+    /* SIDEBAR */
+
+    .sidebar {
+        width: 75px;
+        min-width: 75px;
+        padding: 15px 8px;
+    }
+
+    .sidebar h1 {
+        font-size: 18px;
+        text-align: center;
+    }
+
+    .sidebar h3 {
+        display: none;
+    }
+
+    .groups {
+        margin-top: 20px;
+    }
+
+    .group-button {
+        display: block;
+        padding: 12px 5px;
+        margin-bottom: 8px;
+        text-align: center;
+        font-size: 0;
+    }
+
+    .group-button:first-letter {
+        font-size: 20px;
+    }
+
+    .create-group-button {
+        width: 100%;
+        padding: 10px 2px;
+        font-size: 0;
+    }
+
+    .create-group-button::first-letter {
+        font-size: 20px;
+    }
+
+    .logout-button {
+        display: block;
+        text-align: center;
+        font-size: 0;
+        margin-top: 10px;
+    }
+
+    .logout-button::first-letter {
+        font-size: 20px;
+    }
+
+
+    /* CHAT */
+
+    .chat {
+        flex: 1;
+        min-width: 0;
+        width: calc(100% - 75px);
+    }
+
+    .chat-header {
+        padding: 12px;
+    }
+
+    .chat-header-buttons {
+        gap: 4px;
+    }
+
+    .notification-button {
+        font-size: 0;
+        padding: 8px;
+    }
+
+    .notification-button::first-letter {
+        font-size: 18px;
+    }
+
+    .delete-group-button {
+        font-size: 0;
+        padding: 8px;
+    }
+
+    .delete-group-button::first-letter {
+        font-size: 18px;
+    }
+
+
+    /* MELDINGER */
+
+    .messages {
+        padding: 12px;
+        overflow-y: auto;
+    }
+
+    .message {
+        max-width: 85%;
+        word-wrap: break-word;
+    }
+
+
+    /* SKRIVEFELT */
+
+    .message-box {
+        padding: 8px;
+    }
+
+    .message-box form {
+        display: flex;
+        gap: 6px;
+    }
+
+    .message-box input[type="text"] {
+        min-width: 0;
+        flex: 1;
+        font-size: 16px;
+    }
+
+    .message-box button {
+        padding: 10px 12px;
+    }
+
+
+    /* MEDLEMMER */
+
+    .members-sidebar {
+        display: none;
+    }
+
+
+    /* MODALER */
+
+    .group-window {
+        padding: 15px;
+    }
+
+    .group-box {
+        width: 100%;
+        max-width: 400px;
+        box-sizing: border-box;
+    }
+
+}
+
+
+/* =========================================
+   VELDIG SMÅ MOBILER
+   ========================================= */
+
+@media (max-width: 450px) {
+
+    .sidebar {
+        width: 60px;
+        min-width: 60px;
+        padding: 10px 5px;
+    }
+
+    .sidebar h1 {
+        font-size: 15px;
+    }
+
+    .chat {
+        width: calc(100% - 60px);
+    }
+
+    .chat-header {
+        padding: 10px;
+    }
+
+    .chat-header small {
+        display: block;
+    }
+
+    .message {
+        max-width: 90%;
+    }
+
+    .message-box input[type="text"] {
+        font-size: 16px;
+    }
+
+}
+
+/* =========================================
+   MELDINGSKNAPP
+   ========================================= */
+
+.message-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.message-menu-button {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    padding: 3px 6px;
+    border-radius: 5px;
+    opacity: 0.5;
+}
+
+.message-menu-button:hover {
+    background: rgba(255, 255, 255, 0.08);
+    opacity: 1;
+}
+
+.edited-label {
+    opacity: 0.6;
+    font-style: italic;
+    margin-right: 6px;
+}
+
+
+/* =========================================
+   REDIGERING
+   ========================================= */
+
+.edit-message-box {
+    display: flex;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.edit-message-input {
+    flex: 1;
+    min-width: 0;
+    padding: 8px;
+    border: 1px solid #444;
+    border-radius: 6px;
+    background: #181818;
+    color: white;
+    outline: none;
+}
+
+.edit-message-input:focus {
+    border-color: #F5C400;
+}
+
+.edit-message-save,
+.edit-message-cancel {
+    border: none;
+    border-radius: 6px;
+    padding: 7px 10px;
+    cursor: pointer;
+}
+
+.edit-message-save {
+    background: #F5C400;
+    color: #111;
+    font-weight: bold;
+}
+
+.edit-message-cancel {
+    background: #333;
+    color: white;
+}
+
+.message-actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.delete-message-button:hover {
+    background: rgba(255, 70, 70, 0.15);
+}
+
+/* PROFIL */
+
+.profile-link {
+    display: block;
+    text-decoration: none;
+    color: white;
+    padding: 12px 15px;
+    margin-top: 10px;
+    border-radius: 8px;
+    background: #2a2a2a;
+    transition: 0.2s;
+}
+
+.profile-link:hover {
+    background: #3a3a3a;
+}
+
+/* =========================================
+   PROFIL
+   ========================================= */
+
+.profile-page {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 30px;
+    box-sizing: border-box;
+}
+
+.profile-card {
+    width: 100%;
+    max-width: 650px;
+    background: #1b2333;
+    border-radius: 16px;
+    padding: 30px;
+    box-sizing: border-box;
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.3);
+}
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.profile-header h1 {
+    margin: 0;
+    color: white;
+}
+
+.profile-back {
+    color: #8ab4ff;
+    text-decoration: none;
+}
+
+.profile-back:hover {
+    text-decoration: underline;
+}
+
+/* REDIGER PROFIL */
+
+.edit-profile-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.edit-profile-form label {
+    color: white;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+.edit-profile-form input,
+.edit-profile-form textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px;
+    border: 1px solid #3c465c;
+    border-radius: 8px;
+    background: #111827;
+    color: white;
+    font-size: 16px;
+    outline: none;
+}
+
+.edit-profile-form input:focus,
+.edit-profile-form textarea:focus {
+    border-color: #6ea8fe;
+}
+
+.edit-profile-form textarea {
+    min-height: 130px;
+    resize: vertical;
+    font-family: inherit;
+}
+
+.profile-save-button {
+    margin-top: 15px;
+    padding: 12px 18px;
+    border: none;
+    border-radius: 8px;
+    background: #3b82f6;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.profile-save-button:hover {
+    background: #2563eb;
+}
+
+/* PROFIL-LENKE */
+
+.profile-link {
+    display: block;
+    text-decoration: none;
+    color: white;
+    padding: 12px 15px;
+    margin-top: 10px;
+    border-radius: 8px;
+    background: #2a2a2a;
+    transition: 0.2s;
+}
+
+.profile-link:hover {
+    background: #3a3a3a;
+}
+
+.member-profile-link {
+    color: inherit;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.member-profile-link:hover {
+    text-decoration: underline;
+}

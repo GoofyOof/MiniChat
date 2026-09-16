@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rediger profil - MiniChat</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <div class="profile-page">
+
+        <div class="profile-card">
+
+            <div class="profile-header">
+
+                <a href="{{ url_for('profile') }}" class="profile-back">
+                    ← Tilbake
+                </a>
+
+                <h1>Rediger profil</h1>
+
+            </div>
+
+
+            <form method="POST" class="edit-profile-form">
+
+                <label for="display_name">
+                    Visningsnavn
+                </label>
+
+                <input
+                    type="text"
+                    id="display_name"
+                    name="display_name"
+                    value="{{ user['display_name'] or user['username'] }}"
+                    maxlength="30"
+                    required
+                >
+
+
+                <label for="bio">
+                    Bio
+                </label>
+
+                <textarea
+                    id="bio"
+                    name="bio"
+                    maxlength="160"
+                    placeholder="Skriv litt om deg selv..."
+                >{{ user['bio'] or '' }}</textarea>
+
+
+                <button type="submit" class="profile-save-button">
+                    💾 Lagre profil
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</body>
+</html>

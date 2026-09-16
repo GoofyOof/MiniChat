@@ -168,13 +168,20 @@
                         value="{{ selected_group['id'] }}"
                     >
 
-                    <input
-                        type="text"
-                        name="content"
-                        placeholder="Skriv en melding..."
-                        autocomplete="off"
-                        required
-                    >
+                    <div class="user-search">
+
+    <input
+        type="text"
+        id="username-search"
+        name="username"
+        placeholder="Skriv brukernavn..."
+        autocomplete="off"
+        required
+    >
+
+    <div id="user-results" class="user-results"></div>
+
+</div>
 
                     <button type="submit">
                         SEND

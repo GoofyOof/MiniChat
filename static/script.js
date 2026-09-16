@@ -95,7 +95,8 @@ async function enableNotifications() {
 // CHAT-OPPDATERING
 // -----------------------------------------
 
-const messagesContainer = document.getElementById("messages");
+const messagesContainer =
+    document.getElementById("messages");
 
 let lastMessageId = 0;
 
@@ -159,9 +160,6 @@ async function updateMessages() {
             return;
         }
 
-
-        // Finn alle nye meldinger
-
         const newMessages =
             messages.filter(function(message) {
 
@@ -170,8 +168,6 @@ async function updateMessages() {
             });
 
 
-        // Fjern "Ingen meldinger"
-
         const emptyChat =
             messagesContainer.querySelector(".empty-chat");
 
@@ -179,8 +175,6 @@ async function updateMessages() {
             emptyChat.remove();
         }
 
-
-        // Legg til nye meldinger
 
         newMessages.forEach(function(message) {
 
@@ -215,18 +209,13 @@ async function updateMessages() {
 
 
             messageElement.appendChild(username);
-
             messageElement.appendChild(content);
-
             messageElement.appendChild(time);
-
 
             messagesContainer.appendChild(
                 messageElement
             );
 
-
-            // Varsel hvis meldingen er fra noen andre
 
             if (
                 message.user_id !=
@@ -246,8 +235,6 @@ async function updateMessages() {
         lastMessageId =
             newestMessage.id;
 
-
-        // Scroll ned
 
         messagesContainer.scrollTop =
             messagesContainer.scrollHeight;
@@ -271,16 +258,13 @@ async function updateMessages() {
 
 function getCurrentUserId() {
 
-    const body =
-        document.body;
-
-    return body.dataset.userId || "";
+    return document.body.dataset.userId || "";
 
 }
 
 
 // -----------------------------------------
-// VIS VARSEL
+// MELDINGSVARSEL
 // -----------------------------------------
 
 function showMessageNotification(
@@ -299,10 +283,185 @@ function showMessageNotification(
     new Notification(
         "Ny melding fra " + username,
         {
-            body: message,
-            icon: "/static/icon.png"
+            body: message
         }
     );
+
+}
+
+
+// -----------------------------------------
+// LIVE BRUKERSØK
+// -----------------------------------------
+
+const usernameSearch =
+    document.getElementById("username-search");
+
+const userResults =
+    document.getElementById("user-results");
+
+
+if (usernameSearch && userResults) {
+
+    let searchTimeout;
+
+
+    usernameSearch.addEventListener(
+        "input",
+        function() {
+
+            clearTimeout(searchTimeout);
+
+            const search =
+                usernameSearch.value.trim();
+
+
+            userResults.innerHTML = "";
+
+
+            if (search.length === 0) {
+                return;
+            }
+
+
+            searchTimeout = setTimeout(
+                searchUsers,
+                200
+            );
+
+        }
+    );
+
+
+    async function searchUsers() {
+
+        const search =
+            usernameSearch.value.trim();
+
+
+        if (search.length === 0) {
+            return;
+        }
+
+
+        const messages =
+            document.getElementById("messages");
+
+
+        if (!messages) {
+            return;
+        }
+
+
+        const groupId =
+            messages.dataset.groupId;
+
+
+        try {
+
+            const response =
+                await fetch(
+                    `/search_users/${groupId}?q=${encodeURIComponent(search)}`
+                );
+
+
+            if (!response.ok) {
+                return;
+            }
+
+
+            const data =
+                await response.json();
+
+
+            userResults.innerHTML = "";
+
+
+            if (data.users.length === 0) {
+
+                const noResults =
+                    document.createElement("div");
+
+                noResults.className =
+                    "no-user-results";
+
+                noResults.textContent =
+                    "Ingen brukere funnet";
+
+                userResults.appendChild(
+                    noResults
+                );
+
+                return;
+
+            }
+
+
+            data.users.forEach(function(user) {
+
+                const userElement =
+                    document.createElement("button");
+
+                userElement.type = "button";
+
+                userElement.className =
+                    "user-result";
+
+
+                const avatar =
+                    document.createElement("div");
+
+                avatar.className =
+                    "user-result-avatar";
+
+                avatar.textContent =
+                    user.username
+                        .charAt(0)
+                        .toUpperCase();
+
+
+                const name =
+                    document.createElement("span");
+
+                name.textContent =
+                    user.username;
+
+
+                userElement.appendChild(avatar);
+                userElement.appendChild(name);
+
+
+                userElement.addEventListener(
+                    "click",
+                    function() {
+
+                        usernameSearch.value =
+                            user.username;
+
+                        userResults.innerHTML =
+                            "";
+
+                    }
+                );
+
+
+                userResults.appendChild(
+                    userElement
+                );
+
+            });
+
+
+        } catch (error) {
+
+            console.log(
+                "Kunne ikke søke etter brukere:",
+                error
+            );
+
+        }
+
+    }
 
 }
 
